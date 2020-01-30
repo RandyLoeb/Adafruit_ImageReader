@@ -14,7 +14,8 @@
  */
 #ifndef __ADAFRUIT_IMAGE_READER_EPD_H__
 #define __ADAFRUIT_IMAGE_READER_EPD_H__
-
+#include "FS.h"
+#include "SPIFFS.h"
 #include "Adafruit_EPD.h"
 #include "Adafruit_ImageReader.h"
 
@@ -22,9 +23,13 @@
    @brief  Data bundle returned with an image loaded to RAM. Used by
            ImageReader.loadBMP() and Image.draw(), not ImageReader.drawBMP().
 */
-class Adafruit_Image_EPD : public Adafruit_Image {
+class Adafruit_Image_EPD : public Adafruit_Image
+{
 public:
   void draw(Adafruit_EPD &epd, int16_t x, int16_t y);
+  uint8_t *getBuffer();
+  int16_t getWidth();
+  int16_t getHeight();
 
 protected:
   friend class Adafruit_ImageReader; ///< Loading occurs here

@@ -12,49 +12,88 @@
              Vertical offset in pixels; top edge = 0, positive = down.
     @return  None (void).
 */
-void Adafruit_Image_EPD::draw(Adafruit_EPD &epd, int16_t x, int16_t y) {
+uint8_t *Adafruit_Image_EPD::getBuffer()
+{
+  return canvas.canvas1->getBuffer();
+}
+
+int16_t Adafruit_Image_EPD::getWidth()
+{
+  return canvas.canvas1->width();
+}
+int16_t Adafruit_Image_EPD::getHeight()
+{
+  return canvas.canvas1->height();
+}
+
+void Adafruit_Image_EPD::draw(Adafruit_EPD &epd, int16_t x, int16_t y)
+{
   int16_t col = x, row = y;
-  if (format == IMAGE_1) {
+  Serial.print("format:");
+  Serial.println(format);
+  Serial.print("width:");
+  Serial.println(canvas.canvas1->width());
+  Serial.print("height:");
+  Serial.println(canvas.canvas1->height());
+  if (format == IMAGE_1)
+  {
     uint8_t *buffer = canvas.canvas1->getBuffer();
     uint8_t i, c;
-    while (row < y + canvas.canvas1->height()) {
-      for (i = 0; i < 8; i++) {
-        if ((*buffer & (0x80 >> i)) > 0) {
+    while (row < y + canvas.canvas1->height())
+    {
+      for (i = 0; i < 8; i++)
+      {
+        if ((*buffer & (0x80 >> i)) > 0)
+        {
           c = EPD_BLACK; // try to infer black
-        } else {
+        }
+        else
+        {
           c = EPD_WHITE;
         }
         epd.writePixel(col, row, c);
 
         col++;
-        if (col == x + canvas.canvas1->width()) {
+        if (col == x + canvas.canvas1->width())
+        {
           col = x;
           row++;
         }
       }
       buffer++;
     };
-  } else if (format == IMAGE_8) {
-  } else if (format == IMAGE_16) {
+  }
+  else if (format == IMAGE_8)
+  {
+  }
+  else if (format == IMAGE_16)
+  {
     uint16_t *buffer = canvas.canvas16->getBuffer();
-    while (row < y + canvas.canvas16->height()) {
+    while (row < y + canvas.canvas16->height())
+    {
       // RGB in 565 format
       uint8_t r = (*buffer & 0xf800) >> 8;
       uint8_t g = (*buffer & 0x07e0) >> 3;
       uint8_t b = (*buffer & 0x001f) << 3;
 
       uint8_t c = 0;
-      if ((r < 0x80) && (g < 0x80) && (b < 0x80)) {
+      if ((r < 0x80) && (g < 0x80) && (b < 0x80))
+      {
         c = EPD_BLACK; // try to infer black
-      } else if ((r >= 0x80) && (g >= 0x80) && (b >= 0x80)) {
+      }
+      else if ((r >= 0x80) && (g >= 0x80) && (b >= 0x80))
+      {
         c = EPD_WHITE;
-      } else if (r >= 0x80) {
+      }
+      else if (r >= 0x80)
+      {
         c = EPD_RED; // try to infer red color
       }
 
       epd.writePixel(col, row, c);
       col++;
-      if (col == x + canvas.canvas16->width()) {
+      if (col == x + canvas.canvas16->width())
+      {
         col = x;
         row++;
       }
