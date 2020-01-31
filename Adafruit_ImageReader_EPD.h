@@ -26,7 +26,7 @@
 class Adafruit_Image_EPD : public Adafruit_Image
 {
 public:
-  void draw(Adafruit_EPD &epd, int16_t x, int16_t y);
+  // void draw(Adafruit_EPD &epd, int16_t x, int16_t y);
   uint8_t *getBuffer();
   int16_t getWidth();
   int16_t getHeight();

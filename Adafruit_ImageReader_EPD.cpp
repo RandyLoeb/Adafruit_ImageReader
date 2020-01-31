@@ -26,6 +26,7 @@ int16_t Adafruit_Image_EPD::getHeight()
   return canvas.canvas1->height();
 }
 
+/*
 void Adafruit_Image_EPD::draw(Adafruit_EPD &epd, int16_t x, int16_t y)
 {
   int16_t col = x, row = y;
@@ -101,3 +102,4 @@ void Adafruit_Image_EPD::draw(Adafruit_EPD &epd, int16_t x, int16_t y)
     };
   }
 }
+*/

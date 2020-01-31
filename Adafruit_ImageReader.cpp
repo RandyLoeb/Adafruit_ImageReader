@@ -537,9 +537,23 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                 // Load and quantize color table
                 for (uint16_t c = 0; c < colors; c++)
                 {
+
                   b = file.read();
                   g = file.read();
                   r = file.read();
+                  Serial.print("c:");
+                  Serial.println(c);
+                  Serial.print("b:");
+                  Serial.println(b);
+                  Serial.print("g:");
+                  Serial.println(g);
+                  Serial.print("r:");
+                  Serial.println(r);
+
+                  if (c == 0 && b == 0)
+                  {
+                    img->_suspectInvertedMonochrome = 1;
+                  }
                   (void)file.read(); // Ignore 4th byte
                   quantized[c] =
                       ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
