@@ -37,6 +37,7 @@
  */
 
 #include "Adafruit_ImageReader.h"
+//#include "FileProxy.h"
 
 // Buffers in BMP draw function (to screen) require 5 bytes/pixel: 3 bytes
 // for each BMP pixel (R+G+B), 2 bytes for each TFT pixel (565 color).
@@ -51,7 +52,7 @@
 #ifdef __AVR__
 #define BUFPIXELS 24 ///<  24 * 5 =  120 bytes
 #else
-#define BUFPIXELS 250 ///< 200 * 5 = 1000 bytes
+#define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
 #endif
 
 // ADAFRUIT_IMAGE CLASS ****************************************************
@@ -249,8 +250,8 @@ Adafruit_ImageReader::Adafruit_ImageReader(void) {}
 */
 Adafruit_ImageReader::~Adafruit_ImageReader(void)
 {
-  if (file)
-    file.close();
+  //if (file)
+  file.close();
   // filesystem is left as-is
 }
 
@@ -384,10 +385,13 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
   //  return IMAGE_SUCCESS;
 
   // Open requested file on SD card
-  if (!(file = SPIFFS.open(filename, FILE_READ)))
+  File spiffsFile;
+  if (!(spiffsFile = SPIFFS.open(filename, FILE_READ)))
   {
     return IMAGE_ERR_FILE_NOT_FOUND;
   }
+
+  file.setFile(spiffsFile);
 
   // Parse BMP header. 0x4D42 (ASCII 'BM') is the Windows BMP signature.
   // There are other values possible in a .BMP file but these are super
@@ -399,6 +403,8 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
     Serial.println(fileSize);
     (void)readLE32();    // Read & ignore creator bytes
     offset = readLE32(); // Start of image data
+    Serial.print("offset:");
+    Serial.println(offset);
     // Read DIB header
     headerSize = readLE32();
     Serial.print("headerSize:");
@@ -554,9 +560,13 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                   {
                     img->_suspectInvertedMonochrome = 1;
                   }
-                  (void)file.read(); // Ignore 4th byte
+                  Serial.println("About to read 4th ignore");
+                  file.read(); // Ignore 4th byte
+                  Serial.println("read 4th ignore");
+                  Serial.println("about to quantize");
                   quantized[c] =
                       ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                  Serial.println("quantized");
                 }
               }
 
@@ -571,10 +581,32 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                 // padding. Also, the seek only takes place if the file
                 // position actually needs to change (avoids a lot of cluster
                 // math in SD library).
+                /*Serial.print("flip:");
+                Serial.println(flip);
+                Serial.print("here bmmPos=");
+                Serial.println(bmpPos);
+                Serial.print("offset");
+                Serial.println(offset);
+                Serial.print("bmpHeight");
+                Serial.println(bmpHeight);
+                Serial.print("row");
+                Serial.println(row);
+                Serial.print("loadY");
+                Serial.println(loadY);
+                Serial.print("rowSize");
+                Serial.println(rowSize);
+                */
                 if (flip) // Bitmap is stored bottom-to-top order (normal BMP)
+                {
                   bmpPos = offset + (bmpHeight - 1 - (row + loadY)) * rowSize;
+                }
                 else // Bitmap is stored top-to-bottom
+                {
                   bmpPos = offset + (row + loadY) * rowSize;
+                }
+                //Serial.print("here bmmPos=");
+                //Serial.println(bmpPos);
+                //delay(10000);
                 if (depth == 24)
                 {
                   bmpPos += loadX * 3;
@@ -587,6 +619,9 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                   if (img)
                     destidx = ((bmpWidth + 7) / 8) * row;
                 }
+                //Serial.print("here bmmPos=");
+                //Serial.println(bmpPos);
+                //Serial.println("about to get position");
                 if (file.position() != bmpPos)
                 { // Need seek?
                   //if (transact)
@@ -594,7 +629,9 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                   //tft->dmaWait();
                   //tft->endWrite(); // End TFT SPI transaction
                   //}
-                  file.seek(bmpPos);     // Seek = SD transaction
+                  //Serial.println("About to seek");
+                  file.seek(bmpPos); // Seek = SD transaction
+                  //Serial.println("seeked");
                   srcidx = sizeof sdbuf; // Force buffer reload
                 }
                 for (col = 0; col < loadWidth; col++)
@@ -623,7 +660,9 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                         bytesToGo -= bytesThisPass;
                       }
 #else
+                      //Serial.println("about to read into buffer");
                       file.read(sdbuf, sizeof sdbuf); // Load from SD
+                                                      //Serial.println("read into buffer");
 #endif
                       ///if (transact)
                       ///tft->startWrite(); // Start TFT SPI transact
@@ -639,10 +678,13 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                       }
                     }
                     else
-                    {                                 // Canvas is simpler,
+                    {
+                      //Serial.println("about to read into buffer2");
+                      // Canvas is simpler,
                       file.read(sdbuf, sizeof sdbuf); // just load sdbuf
-                    }                                 // (destidx never resets)
-                    srcidx = 0;                       // Reset bmp buf index
+                      //Serial.println("read into buffer2");
+                    }           // (destidx never resets)
+                    srcidx = 0; // Reset bmp buf index
                   }
                   if (depth == 24)
                   {
@@ -739,9 +781,10 @@ ImageReturnCode Adafruit_ImageReader::bmpDimensions(char *filename,
 {
 
   ImageReturnCode status = IMAGE_ERR_FILE_NOT_FOUND; // Guilty until innocent
-
-  if ((file = SPIFFS.open(filename, FILE_READ)))
-  {                            // Open requested file
+  File spiffsFile;
+  if ((spiffsFile = SPIFFS.open(filename, FILE_READ)))
+  { // Open requested file
+    file.setFile(spiffsFile);
     status = IMAGE_ERR_FORMAT; // File's there, might not be BMP tho
     if (readLE16() == 0x4D42)
     {                   // BMP signature?

@@ -20,6 +20,7 @@
 
 #include "FS.h"
 #include "SPIFFS.h"
+#include "FileProxy.h"
 
 /** Status codes returned by drawBMP() and loadBMP() */
 enum ImageReturnCode
@@ -112,7 +113,7 @@ public:
   void printStatus(ImageReturnCode stat, Stream &stream = Serial);
 
 private:
-  File file;
+  FileProxy file;
   ImageReturnCode coreBMP(char *filename, uint16_t *dest,
                           int16_t x, int16_t y, Adafruit_Image *img,
                           boolean transact);
