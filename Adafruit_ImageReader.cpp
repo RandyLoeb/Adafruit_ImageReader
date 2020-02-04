@@ -556,9 +556,10 @@ ImageReturnCode Adafruit_ImageReader::coreBMP(
                   Serial.print("r:");
                   Serial.println(r);
 
-                  if (c == 0 && b == 0)
+                  if (c == 0)
                   {
-                    img->_suspectInvertedMonochrome = 1;
+
+                    img->_zeroIsBlack = (b == 0);
                   }
                   Serial.println("About to read 4th ignore");
                   file.read(); // Ignore 4th byte

@@ -72,7 +72,7 @@ public:
                NULL otherwise.
   */
   GFXcanvas1 *getMask(void) const { return mask; };
-  int suspectInvertedMonochrom(void) const { return _suspectInvertedMonochrome; }
+  int suspectInvertedMonochrom(void) const { return _zeroIsBlack; }
 
 protected:
   // MOST OF THESE ARE NOT SUPPORTED YET -- WIP
@@ -85,7 +85,7 @@ protected:
   uint16_t *palette;       ///< Color palette for 8bpp image (or NULL)
   uint8_t format;          ///< Canvas bundle type in use
   void dealloc(void);      ///< Free/deinitialize variables
-  int _suspectInvertedMonochrome;
+  int _zeroIsBlack;
   friend class Adafruit_ImageReader; ///< Loading occurs here
 };
 
